@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, url_for, flash, redirect, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import Goal, Expense
-from app.goals.forms import GoalForm, DepositFundsForm
 from datetime import datetime
+from app.models import Goal, Expense, Income
+from app.goals.forms import GoalForm, DepositFundsForm, WithdrawFundsForm
 
 goals = Blueprint('goals', __name__)
 
@@ -88,6 +88,10 @@ def deposit_funds(goal_id):
         deposit_amount = form.amount.data
         available_savings = current_user.get_available_savings()
         
+        if deposit_amount > available_savings:
+            flash(f'Cannot deposit. You only have ₹{available_savings:,.2f} in unallocated savings.', 'danger')
+            return redirect(url_for('goals.dashboard'))
+            
         goal.current_amount += deposit_amount
         
         # Log as an expense
@@ -99,10 +103,38 @@ def deposit_funds(goal_id):
         
         db.session.commit()
         
-        if deposit_amount > available_savings:
-            flash(f'Warning: You deposited ${deposit_amount:,.2f}, which exceeds your available savings of ${available_savings:,.2f}!', 'danger')
-        else:
-            flash(f'Successfully transferred ${deposit_amount:,.2f} from Savings to {goal.name}!', 'success')
+        flash(f'Successfully transferred ₹{deposit_amount:,.2f} from Savings to {goal.name}!', 'success')
         return redirect(url_for('goals.dashboard'))
         
     return render_template('goals/deposit.html', title='Deposit Funds', form=form, goal=goal)
+
+@goals.route("/goal/<int:goal_id>/withdraw", methods=['GET', 'POST'])
+@login_required
+def withdraw_funds(goal_id):
+    goal = Goal.query.get_or_404(goal_id)
+    if goal.author != current_user:
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('goals.dashboard'))
+    
+    form = WithdrawFundsForm()
+    if form.validate_on_submit():
+        withdraw_amount = form.amount.data
+        
+        if withdraw_amount > goal.current_amount:
+            flash(f'Cannot withdraw more than the current goal amount of ₹{goal.current_amount:,.2f}.', 'danger')
+            return redirect(url_for('goals.dashboard'))
+            
+        goal.current_amount -= withdraw_amount
+        
+        # Log as an income to return to unallocated pool
+        desc = f"Goal Withdrawal: {goal.name}"
+        i = Income(title=desc, amount=withdraw_amount, source="Savings Goal",
+                   date=datetime.utcnow().date(), user_id=current_user.id)
+        db.session.add(i)
+        
+        db.session.commit()
+        
+        flash(f'Successfully withdrew ₹{withdraw_amount:,.2f} from {goal.name} back to Savings!', 'success')
+        return redirect(url_for('goals.dashboard'))
+        
+    return render_template('goals/withdraw.html', title='Withdraw Funds', form=form, goal=goal)

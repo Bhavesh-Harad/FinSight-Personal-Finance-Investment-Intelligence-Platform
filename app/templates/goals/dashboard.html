@@ -80,9 +80,12 @@
                     <div class="progress-bar {% if pct >= 100 %}bg-success{% elif pct > 50 %}bg-primary{% else %}bg-warning{% endif %} rounded-pill" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
                 
-                <div class="mt-3 text-center">
+                <div class="mt-3 d-flex justify-content-center gap-2">
                     <a href="{{ url_for('goals.deposit_funds', goal_id=goal.id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
-                        <i class="fa-solid fa-plus-circle me-1"></i> Deposit Funds
+                        <i class="fa-solid fa-plus-circle me-1"></i> Deposit
+                    </a>
+                    <a href="{{ url_for('goals.withdraw_funds', goal_id=goal.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">
+                        <i class="fa-solid fa-minus-circle me-1"></i> Withdraw
                     </a>
                 </div>
                 

@@ -43,6 +43,12 @@ def delete_user(user_id):
 def dashboard():
     form = ExpenseForm()
     if form.validate_on_submit():
+        # Check if expense exceeds unallocated savings
+        available_savings = current_user.get_available_savings()
+        if form.amount.data > available_savings:
+            flash(f'Cannot add expense. Your unallocated savings is only ₹{available_savings:,.2f}.', 'danger')
+            return redirect(url_for('main.dashboard'))
+            
         expense = Expense(title=form.title.data, amount=form.amount.data, 
                           category=form.category.data, payment_mode=form.payment_mode.data,
                           date=form.date.data, description=form.description.data, 

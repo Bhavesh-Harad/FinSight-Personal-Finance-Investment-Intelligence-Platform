@@ -16,3 +16,7 @@ class GoalForm(FlaskForm):
 class DepositFundsForm(FlaskForm):
     amount = FloatField('Amount to Deposit', validators=[DataRequired(), NumberRange(min=0.01)])
     submit = SubmitField('Transfer from Savings')
+
+class WithdrawFundsForm(FlaskForm):
+    amount = FloatField('Amount to Withdraw', validators=[DataRequired(), NumberRange(min=0.01)])
+    submit = SubmitField('Transfer back to Savings')
