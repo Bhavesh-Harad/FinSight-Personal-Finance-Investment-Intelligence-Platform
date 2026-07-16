@@ -65,6 +65,54 @@
     </div>
 </div>
 
+<!-- Lifetime Savings Overview -->
+<div class="row g-4 mb-4">
+    <!-- Total Lifetime Savings -->
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm bg-success bg-opacity-10 text-success">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase fw-bold mb-2 opacity-75">Total Accumulated Savings</h6>
+                        <h3 class="mb-0 fw-bolder">₹{{ "%.2f"|format(total_lifetime_savings) }}</h3>
+                    </div>
+                    <i class="fa-solid fa-piggy-bank fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Allocated Savings -->
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm bg-primary bg-opacity-10 text-primary">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase fw-bold mb-2 opacity-75">Allocated (Goals & Inv.)</h6>
+                        <h3 class="mb-0 fw-bolder">₹{{ "%.2f"|format(allocated_savings) }}</h3>
+                    </div>
+                    <i class="fa-solid fa-bullseye fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Unallocated Savings -->
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm bg-info bg-opacity-10 text-info">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase fw-bold mb-2 opacity-75">Unallocated Savings (Cash)</h6>
+                        <h3 class="mb-0 fw-bolder">₹{{ "%.2f"|format(unallocated_savings) }}</h3>
+                    </div>
+                    <i class="fa-solid fa-wallet fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h5 class="fw-bold mb-3 mt-5 text-muted border-bottom pb-2">This Month's Summary</h5>
+
 <!-- Summary Cards Row -->
 <div class="row g-4 mb-4">
     <!-- Income -->

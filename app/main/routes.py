@@ -188,6 +188,14 @@ def dashboard():
     planned_savings = total_income_this_month - total_budget_this_month
     actual_savings = total_income_this_month - total_spent_this_month
     
+    # Lifetime savings calculation
+    total_lifetime_income = sum(i.amount for i in incomes)
+    total_lifetime_expense = sum(e.amount for e in expenses)
+    total_lifetime_savings = total_lifetime_income - total_lifetime_expense
+    
+    allocated_savings = sum(g.current_amount for g in current_user.goals) + sum(inv.total_invested() for inv in current_user.investments)
+    unallocated_savings = total_lifetime_savings - allocated_savings
+    
     health_data = calculate_health_score(current_user)
 
     return render_template('dashboard/index.html', title='Dashboard', 
@@ -202,7 +210,10 @@ def dashboard():
                            pm_pie_labels=pm_pie_labels, pm_pie_data=pm_pie_data,
                            bar_labels=bar_labels, bar_data=bar_data,
                            recent_transactions=recent_transactions,
-                           health_data=health_data)
+                           health_data=health_data,
+                           total_lifetime_savings=total_lifetime_savings,
+                           allocated_savings=allocated_savings,
+                           unallocated_savings=unallocated_savings)
 
 @main.route("/savings")
 @login_required
