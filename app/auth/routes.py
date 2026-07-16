@@ -6,7 +6,7 @@ from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 from app import db, bcrypt, mail, oauth
 from app.models import User
-from app.auth.forms import RegistrationForm, LoginForm, UpdateProfileForm, RequestResetForm, ResetPasswordForm
+from app.auth.forms import RegistrationForm, LoginForm, UpdateProfileForm, RequestResetForm, ResetPasswordForm, ChangePasswordForm
 from functools import wraps
 
 auth = Blueprint('auth', __name__)
@@ -105,7 +105,10 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.dashboard'))
         else:
-            flash('Invalid email or password.', 'danger')
+            if user and user.google_id:
+                flash('It looks like you signed up with Google. Please use "Login with Google", or click "Forgot Password" below to set a manual password.', 'info')
+            else:
+                flash('Invalid email or password.', 'danger')
     return render_template('auth/login.html', title='Login', form=form)
 
 @auth.route('/login/google')
@@ -234,3 +237,23 @@ def reset_token(token):
         flash('Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_token.html', title='Reset Password', form=form)
+
+@auth.route("/change_password", methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if not current_user.google_id and form.old_password.data:
+            if not bcrypt.check_password_hash(current_user.password_hash, form.old_password.data):
+                flash('Incorrect current password.', 'danger')
+                return redirect(url_for('auth.change_password'))
+        elif not current_user.google_id and not form.old_password.data:
+             flash('You must provide your current password.', 'danger')
+             return redirect(url_for('auth.change_password'))
+             
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        current_user.password_hash = hashed_password
+        db.session.commit()
+        flash('Your password has been successfully updated!', 'success')
+        return redirect(url_for('auth.profile'))
+    return render_template('auth/change_password.html', title='Change Password', form=form)

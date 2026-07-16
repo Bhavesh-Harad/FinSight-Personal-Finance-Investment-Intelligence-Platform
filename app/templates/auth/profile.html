@@ -61,6 +61,10 @@
                             {{ form.email(class="form-control") }}
                         {% endif %}
                     </div>
+
+                    <div class="mb-4 text-center">
+                        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-key"></i> Change / Set Manual Password</a>
+                    </div>
                     
                     <h6 class="fw-bold mb-3 mt-4 text-muted border-bottom pb-2">Financial Details</h6>
                     

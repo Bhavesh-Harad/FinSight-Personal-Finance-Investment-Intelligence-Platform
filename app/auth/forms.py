@@ -45,6 +45,19 @@ class RequestResetForm(FlaskForm):
         if user is None:
             raise ValidationError('There is no account with that email. You must register first.')
 
+class ChangePasswordForm(FlaskForm):
+    old_password = PasswordField('Current Password (leave blank if you signed up with Google)', validators=[])
+    password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=8, message="Password must be at least 8 characters long."),
+        Regexp(r'(?=.*[A-Z])', message="Must contain uppercase."),
+        Regexp(r'(?=.*[a-z])', message="Must contain lowercase."),
+        Regexp(r'(?=.*\d)', message="Must contain number."),
+        Regexp(r'(?=.*[@$!%*?&#])', message="Must contain special character.")
+    ])
+    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
+    submit = SubmitField('Update Password')
+
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('Password', validators=[
         DataRequired(),
