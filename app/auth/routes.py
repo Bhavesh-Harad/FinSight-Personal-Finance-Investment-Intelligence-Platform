@@ -35,7 +35,12 @@ def send_verification_email(user_data):
 
 If you did not make this request then simply ignore this email and no changes will be made.
 '''
-    Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+    try:
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Error sending verification email: {e}")
+        return False
 
 def send_welcome_email(user):
     msg = Message('Welcome to FinSight!',
@@ -63,9 +68,12 @@ def register():
             'email': form.email.data.lower(),
             'password_hash': hashed_password
         }
-        send_verification_email(user_data)
-        flash('An email has been sent with instructions to verify your account.', 'info')
-        return redirect(url_for('auth.login'))
+        if send_verification_email(user_data):
+            flash('An email has been sent with instructions to verify your account.', 'info')
+            return redirect(url_for('auth.login'))
+        else:
+            flash('Failed to send email. Please enter a valid, existing email address.', 'danger')
+            return render_template('auth/register.html', title='Register', form=form)
     return render_template('auth/register.html', title='Register', form=form)
 
 @auth.route("/verify_email/<token>")
