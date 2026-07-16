@@ -35,12 +35,6 @@ def list_expenses():
 def new_expense():
     form = ExpenseForm()
     if form.validate_on_submit():
-        # Check if expense exceeds unallocated savings
-        available_savings = current_user.get_available_savings()
-        if form.amount.data > available_savings:
-            flash(f'Cannot add expense. Your unallocated savings is only ₹{available_savings:,.2f}.', 'danger')
-            return render_template('expenses/create_edit.html', title='New Expense', form=form, legend='New Expense')
-            
         expense = Expense(title=form.title.data, amount=form.amount.data, 
                           category=form.category.data, payment_mode=form.payment_mode.data,
                           date=form.date.data, description=form.description.data, 
@@ -117,14 +111,6 @@ def update_expense(expense_id):
         return redirect(url_for('expenses.list_expenses'))
     form = ExpenseForm()
     if form.validate_on_submit():
-        # Check if expense update exceeds unallocated savings
-        amount_difference = form.amount.data - expense.amount
-        if amount_difference > 0:
-            available_savings = current_user.get_available_savings()
-            if amount_difference > available_savings:
-                flash(f'Cannot update expense. The increase of ₹{amount_difference:,.2f} exceeds your unallocated savings of ₹{available_savings:,.2f}.', 'danger')
-                return render_template('expenses/create_edit.html', title='Update Expense', form=form, legend='Update Expense')
-                
         expense.title = form.title.data
         expense.amount = form.amount.data
         expense.category = form.category.data

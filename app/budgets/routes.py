@@ -48,8 +48,10 @@ def list_budgets():
 def new_budget():
     form = BudgetForm()
     if form.validate_on_submit():
-        # Get available unallocated savings
-        available_savings = current_user.get_available_savings()
+        # Get total income for the month
+        incomes = Income.query.filter_by(user_id=current_user.id).all()
+        monthly_incomes = [i for i in incomes if i.date.month == int(form.month.data) and i.date.year == form.year.data]
+        total_income = sum(i.amount for i in monthly_incomes)
         
         # Get existing budgets for the month
         existing_budgets = Budget.query.filter_by(user_id=current_user.id, month=int(form.month.data), year=form.year.data).all()
@@ -59,8 +61,8 @@ def new_budget():
         
         if form.category.data == 'Overall':
             proposed_overall = form.amount.data
-            if proposed_overall > available_savings:
-                flash(f'Cannot set budget. Your proposed overall budget (₹{proposed_overall}) exceeds your unallocated savings (₹{available_savings:,.2f}).', 'danger')
+            if proposed_overall > total_income:
+                flash(f'Cannot set budget. Your proposed overall budget (₹{proposed_overall}) exceeds your total income (₹{total_income}) for {form.month.data}/{form.year.data}.', 'danger')
                 return render_template('budgets/create_edit.html', title='New Budget', form=form, legend='New Budget')
             if proposed_overall < current_budget_total:
                 flash(f'Cannot set overall budget to ₹{proposed_overall} because the sum of your individual category budgets (₹{current_budget_total}) exceeds it.', 'danger')
@@ -72,8 +74,8 @@ def new_budget():
                     flash(f'Cannot set budget. The sum of your category budgets (₹{proposed_category_total}) would exceed your Overall budget (₹{overall_budget.amount}).', 'danger')
                     return render_template('budgets/create_edit.html', title='New Budget', form=form, legend='New Budget')
             else:
-                if proposed_category_total > available_savings:
-                    flash(f'Cannot set budget. Your proposed total budget (₹{proposed_category_total}) exceeds your unallocated savings (₹{available_savings:,.2f}).', 'danger')
+                if proposed_category_total > total_income:
+                    flash(f'Cannot set budget. Your proposed total budget (₹{proposed_category_total}) exceeds your total income (₹{total_income}) for {form.month.data}/{form.year.data}.', 'danger')
                     return render_template('budgets/create_edit.html', title='New Budget', form=form, legend='New Budget')
 
         # Check if budget for category already exists for this month/year
@@ -107,8 +109,10 @@ def update_budget(budget_id):
     
     form = BudgetForm()
     if form.validate_on_submit():
-        # Get available unallocated savings
-        available_savings = current_user.get_available_savings()
+        # Get total income for the month
+        incomes = Income.query.filter_by(user_id=current_user.id).all()
+        monthly_incomes = [i for i in incomes if i.date.month == int(form.month.data) and i.date.year == form.year.data]
+        total_income = sum(i.amount for i in monthly_incomes)
         
         # Get existing budgets for the month
         existing_budgets = Budget.query.filter_by(user_id=current_user.id, month=int(form.month.data), year=form.year.data).all()
@@ -126,8 +130,8 @@ def update_budget(budget_id):
 
         if form.category.data == 'Overall':
             proposed_overall = form.amount.data
-            if proposed_overall > available_savings:
-                flash(f'Cannot set budget. Your proposed overall budget (₹{proposed_overall}) exceeds your unallocated savings (₹{available_savings:,.2f}).', 'danger')
+            if proposed_overall > total_income:
+                flash(f'Cannot set budget. Your proposed overall budget (₹{proposed_overall}) exceeds your total income (₹{total_income}) for {form.month.data}/{form.year.data}.', 'danger')
                 return render_template('budgets/create_edit.html', title='Update Budget', form=form, legend='Update Budget')
             if proposed_overall < current_budget_total:
                 flash(f'Cannot set overall budget to ₹{proposed_overall} because the sum of your individual category budgets (₹{current_budget_total}) exceeds it.', 'danger')
@@ -143,8 +147,8 @@ def update_budget(budget_id):
                     flash(f'Cannot set budget. The sum of your category budgets (₹{proposed_category_total}) would exceed your Overall budget (₹{overall_budget.amount}).', 'danger')
                     return render_template('budgets/create_edit.html', title='Update Budget', form=form, legend='Update Budget')
             else:
-                if proposed_category_total > available_savings:
-                    flash(f'Cannot set budget. Your proposed total budget (₹{proposed_category_total}) exceeds your unallocated savings (₹{available_savings:,.2f}).', 'danger')
+                if proposed_category_total > total_income:
+                    flash(f'Cannot set budget. Your proposed total budget (₹{proposed_category_total}) exceeds your total income (₹{total_income}) for {form.month.data}/{form.year.data}.', 'danger')
                     return render_template('budgets/create_edit.html', title='Update Budget', form=form, legend='Update Budget')
 
         # Check for duplicates when changing category/month/year

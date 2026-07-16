@@ -43,12 +43,6 @@ def delete_user(user_id):
 def dashboard():
     form = ExpenseForm()
     if form.validate_on_submit():
-        # Check if expense exceeds unallocated savings
-        available_savings = current_user.get_available_savings()
-        if form.amount.data > available_savings:
-            flash(f'Cannot add expense. Your unallocated savings is only ₹{available_savings:,.2f}.', 'danger')
-            return redirect(url_for('main.dashboard'))
-            
         expense = Expense(title=form.title.data, amount=form.amount.data, 
                           category=form.category.data, payment_mode=form.payment_mode.data,
                           date=form.date.data, description=form.description.data, 
@@ -194,13 +188,55 @@ def dashboard():
     planned_savings = total_income_this_month - total_budget_this_month
     actual_savings = total_income_this_month - total_spent_this_month
     
-    # Lifetime savings calculation
-    total_lifetime_income = sum(i.amount for i in incomes)
-    total_lifetime_expense = sum(e.amount for e in expenses)
-    total_lifetime_savings = total_lifetime_income - total_lifetime_expense
+    # 12-Month Savings Chart Logic
+    months_data = {}
     
-    allocated_savings = sum(g.current_amount for g in current_user.goals) + sum(inv.total_invested() for inv in current_user.investments)
-    unallocated_savings = total_lifetime_savings - allocated_savings
+    # Process incomes
+    all_incomes = Income.query.filter_by(user_id=current_user.id).all()
+    for i in all_incomes:
+        key = f"{i.date.year}-{i.date.month:02d}"
+        if key not in months_data:
+            months_data[key] = {'income': 0, 'expense': 0, 'budget': 0, 'date_obj': i.date.replace(day=1)}
+        months_data[key]['income'] += i.amount
+        
+    # Process expenses
+    all_expenses = Expense.query.filter_by(user_id=current_user.id).all()
+    for e in all_expenses:
+        key = f"{e.date.year}-{e.date.month:02d}"
+        if key not in months_data:
+            months_data[key] = {'income': 0, 'expense': 0, 'budget': 0, 'date_obj': e.date.replace(day=1)}
+        months_data[key]['expense'] += e.amount
+        
+    # Process budgets
+    all_budgets = Budget.query.filter_by(user_id=current_user.id).all()
+    for b in all_budgets:
+        key = f"{b.year}-{b.month:02d}"
+        if key not in months_data:
+            months_data[key] = {'income': 0, 'expense': 0, 'budget': 0, 'date_obj': datetime(b.year, b.month, 1)}
+            
+    # Re-evaluate budgets per month
+    for key, data in months_data.items():
+        year, month = map(int, key.split('-'))
+        month_budgets = [b for b in all_budgets if b.year == year and b.month == month]
+        overall_b = next((b for b in month_budgets if b.category == 'Overall'), None)
+        if overall_b:
+            data['budget'] = overall_b.amount
+        else:
+            data['budget'] = sum(b.amount for b in month_budgets)
+            
+        data['planned_savings'] = data['income'] - data['budget']
+        data['actual_savings'] = data['income'] - data['expense']
+        
+    # Sort months descending
+    sorted_months = sorted(months_data.values(), key=lambda x: x['date_obj'], reverse=True)
+    
+    # Chart data (last 12 months, sorted chronologically)
+    chart_months = sorted_months[:12]
+    chart_months.reverse()
+    
+    savings_bar_labels = [m['date_obj'].strftime('%b %Y') for m in chart_months]
+    bar_data_planned = [m['planned_savings'] for m in chart_months]
+    bar_data_actual = [m['actual_savings'] for m in chart_months]
     
     health_data = calculate_health_score(current_user)
 
@@ -217,83 +253,8 @@ def dashboard():
                            bar_labels=bar_labels, bar_data=bar_data,
                            recent_transactions=recent_transactions,
                            health_data=health_data,
-                           total_lifetime_savings=total_lifetime_savings,
-                           allocated_savings=allocated_savings,
-                           unallocated_savings=unallocated_savings)
-
-@main.route("/savings")
-@login_required
-def savings():
-    from app.models import Income, Budget
-    expenses = Expense.query.filter_by(user_id=current_user.id).all()
-    incomes = Income.query.filter_by(user_id=current_user.id).all()
-    budgets = Budget.query.filter_by(user_id=current_user.id).all()
-    
-    total_lifetime_income = sum(i.amount for i in incomes)
-    total_lifetime_expense = sum(e.amount for e in expenses)
-    total_accumulated_savings = total_lifetime_income - total_lifetime_expense
-    
-    total_invested = sum(inv.total_invested() for inv in current_user.investments)
-    total_goals = sum(g.current_amount for g in current_user.goals)
-    available_savings = current_user.get_available_savings()
-    
-    # Calculate month-wise data
-    months_data = {}
-    
-    # Process incomes
-    for i in incomes:
-        key = f"{i.date.year}-{i.date.month:02d}"
-        if key not in months_data:
-            months_data[key] = {'income': 0, 'expense': 0, 'budget': 0, 'date_obj': i.date.replace(day=1)}
-        months_data[key]['income'] += i.amount
-        
-    # Process expenses
-    for e in expenses:
-        key = f"{e.date.year}-{e.date.month:02d}"
-        if key not in months_data:
-            months_data[key] = {'income': 0, 'expense': 0, 'budget': 0, 'date_obj': e.date.replace(day=1)}
-        months_data[key]['expense'] += e.amount
-        
-    # Process budgets
-    for b in budgets:
-        key = f"{b.year}-{b.month:02d}"
-        if key not in months_data:
-            months_data[key] = {'income': 0, 'expense': 0, 'budget': 0, 'date_obj': datetime(b.year, b.month, 1)}
-        
-        # If there's an Overall budget for this month, use it.
-        # Otherwise, sum the categories.
-        # It's easier to compute it separately per month:
-    
-    # Re-evaluate budgets per month to handle 'Overall' correctly
-    for key, data in months_data.items():
-        year, month = map(int, key.split('-'))
-        month_budgets = [b for b in budgets if b.year == year and b.month == month]
-        overall_b = next((b for b in month_budgets if b.category == 'Overall'), None)
-        if overall_b:
-            data['budget'] = overall_b.amount
-        else:
-            data['budget'] = sum(b.amount for b in month_budgets)
-            
-        data['planned_savings'] = data['income'] - data['budget']
-        data['actual_savings'] = data['income'] - data['expense']
-        
-    # Sort months descending
-    sorted_months = sorted(months_data.values(), key=lambda x: x['date_obj'], reverse=True)
-    
-    # Chart data (last 12 months, sorted chronologically for chart)
-    chart_months = sorted_months[:12]
-    chart_months.reverse()
-    
-    bar_labels = [m['date_obj'].strftime('%b %Y') for m in chart_months]
-    bar_data_planned = [m['planned_savings'] for m in chart_months]
-    bar_data_actual = [m['actual_savings'] for m in chart_months]
-
-    return render_template('dashboard/savings.html', title='Savings Dashboard',
-                           total_accumulated=total_accumulated_savings,
-                           total_invested=total_invested,
-                           total_goals=total_goals,
-                           available_savings=available_savings,
-                           months_data=sorted_months,
-                           bar_labels=bar_labels,
+                           savings_bar_labels=savings_bar_labels,
                            bar_data_planned=bar_data_planned,
                            bar_data_actual=bar_data_actual)
+
+

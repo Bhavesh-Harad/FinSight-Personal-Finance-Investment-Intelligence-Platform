@@ -65,47 +65,22 @@
     </div>
 </div>
 
-<!-- Lifetime Savings Overview -->
+<!-- Savings Chart (Migrated from savings module) -->
 <div class="row g-4 mb-4">
-    <!-- Total Lifetime Savings -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm bg-success bg-opacity-10 text-success">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-uppercase fw-bold mb-2 opacity-75">Total Accumulated Savings</h6>
-                        <h3 class="mb-0 fw-bolder">₹{{ "%.2f"|format(total_lifetime_savings) }}</h3>
-                    </div>
-                    <i class="fa-solid fa-piggy-bank fa-2x opacity-50"></i>
-                </div>
+    <div class="col-xl-12">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <h6 class="m-0 font-weight-bold text-primary">Savings Trend (Last 12 Months)</h6>
             </div>
-        </div>
-    </div>
-    <!-- Allocated Savings -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm bg-primary bg-opacity-10 text-primary">
             <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-uppercase fw-bold mb-2 opacity-75">Allocated (Goals & Inv.)</h6>
-                        <h3 class="mb-0 fw-bolder">₹{{ "%.2f"|format(allocated_savings) }}</h3>
-                    </div>
-                    <i class="fa-solid fa-bullseye fa-2x opacity-50"></i>
+                {% if savings_bar_labels|length > 0 %}
+                <canvas id="savingsChart" height="300"></canvas>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-chart-bar fa-3x mb-3 text-light"></i>
+                    <p>Not enough data to generate chart.</p>
                 </div>
-            </div>
-        </div>
-    </div>
-    <!-- Unallocated Savings -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm bg-info bg-opacity-10 text-info">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-uppercase fw-bold mb-2 opacity-75">Unallocated Savings (Cash)</h6>
-                        <h3 class="mb-0 fw-bolder">₹{{ "%.2f"|format(unallocated_savings) }}</h3>
-                    </div>
-                    <i class="fa-solid fa-wallet fa-2x opacity-50"></i>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -532,5 +507,51 @@
             }
         });
     }
+    // --- Savings Trend Chart ---
+    {% if savings_bar_labels|length > 0 %}
+    var savingsCtx = document.getElementById('savingsChart');
+    if (savingsCtx) {
+        new Chart(savingsCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ savings_bar_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Planned Savings (Income - Budget)',
+                        data: {{ bar_data_planned|safe }},
+                        backgroundColor: 'rgba(25, 135, 84, 0.5)',
+                        borderColor: 'rgb(25, 135, 84)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Actual Savings (Income - Expenses)',
+                        data: {{ bar_data_actual|safe }},
+                        backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                        borderColor: 'rgb(13, 110, 253)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 4], color: '#e9ecef' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
 </script>
 {% endblock %}

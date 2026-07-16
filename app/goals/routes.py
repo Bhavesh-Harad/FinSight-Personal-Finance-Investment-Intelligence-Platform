@@ -88,10 +88,7 @@ def deposit_funds(goal_id):
         deposit_amount = form.amount.data
         available_savings = current_user.get_available_savings()
         
-        if deposit_amount > available_savings:
-            flash(f'Cannot deposit. You only have ₹{available_savings:,.2f} in unallocated savings.', 'danger')
-            return redirect(url_for('goals.dashboard'))
-            
+
         goal.current_amount += deposit_amount
         
         # Log as an expense
@@ -103,7 +100,10 @@ def deposit_funds(goal_id):
         
         db.session.commit()
         
-        flash(f'Successfully transferred ₹{deposit_amount:,.2f} from Savings to {goal.name}!', 'success')
+        if deposit_amount > available_savings:
+            flash(f'Warning: You deposited ₹{deposit_amount:,.2f}, which exceeds your available savings of ₹{available_savings:,.2f}!', 'danger')
+        else:
+            flash(f'Successfully transferred ₹{deposit_amount:,.2f} from Savings to {goal.name}!', 'success')
         return redirect(url_for('goals.dashboard'))
         
     return render_template('goals/deposit.html', title='Deposit Funds', form=form, goal=goal)
