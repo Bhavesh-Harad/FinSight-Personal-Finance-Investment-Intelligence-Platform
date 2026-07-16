@@ -1,101 +1,74 @@
-# FinSight: Personal Finance & Investment Intelligence Platform
+# FinSight
 
-FinSight is a comprehensive, full-stack personal financial management and investment tracking platform built with Python (Flask) and Bootstrap 5. It empowers users to take control of their finances by tracking expenses, managing incomes, monitoring investments, setting budgets, and achieving financial goals.
+## What is FinSight?
+FinSight is a personal finance and investment intelligence platform designed to help users take control of their money. It provides a centralized, easy-to-use dashboard to monitor incomes, track daily expenses, manage budgets, keep an eye on investment portfolios, and track progress toward long-term financial goals.
 
-## 🌟 Key Features
+## Features Implemented
+- **User Authentication:** Secure registration and login system with encrypted passwords and profile management.
+- **Financial Dashboard:** A visual overview of your financial health, displaying total savings, spending habits, and dynamic charts.
+- **Income & Expense Tracking:** Log and categorize your daily expenses and income sources with dates and payment modes.
+- **Budget Monitoring:** Set up monthly or yearly budgets for specific categories and track how much you have utilized.
+- **Investment Portfolio:** Track various assets (stocks, mutual funds, real estate). It automatically calculates your absolute returns and percentage returns based on your purchase and current prices.
+- **Financial Goals:** Define short-term and long-term goals (e.g., "Emergency Fund" or "New Car"), and the app calculates your progress, remaining time, and required monthly savings.
 
-### 1. User Authentication & Profile Management
-- Secure user registration and login (password hashing via Flask-Bcrypt).
-- User profile management with roles and verification flags.
-- Built-in support for Google OAuth (extendable).
-
-### 2. Comprehensive Dashboard
-- Centralized dashboard displaying total available savings.
-- Dynamic charts (via Chart.js) for visual breakdown of finances.
-- Quick summary of your current financial health.
-
-### 3. Expense & Income Tracking
-- **Expenses**: Log title, amount, category, payment mode (Cash, Card, etc.), and date.
-- **Incomes**: Track various income sources, amounts, and dates.
-- Easily review transaction histories and categorize spending.
-
-### 4. Budget Monitoring
-- Create monthly/yearly budgets per category.
-- Monitor your budget utilization against your actual logged expenses.
-
-### 5. Investment Portfolio Management
-- Track stocks, ETFs, mutual funds, real estate, crypto, and more.
-- Log purchase price, quantity, and current price.
-- Automatic calculations for **Absolute Returns**, **Percentage Returns**, Total Invested value, and Current value.
-
-### 6. Financial Goal Tracking
-- Create Short-term and Long-term financial goals (e.g., "Buy a house", "Emergency Fund").
-- Track target amount, current saved amount, and deadlines.
-- Automatically calculates progress percentages, remaining amounts, time left, and required monthly savings to hit the goal on time.
+## Tech Stack Used
+- **Backend:** Python, Flask (Web Framework)
+- **Database:** SQLite (managed via Flask-SQLAlchemy)
+- **Security:** Flask-Bcrypt (Password Hashing), Flask-Login (User Sessions)
+- **Frontend:** HTML5, CSS3, Bootstrap 5, Jinja2 (HTML Templating)
+- **Data Visualization:** Chart.js
 
 ---
 
-## 🛠 Tech Stack
+## How to Run the Code from Scratch
 
-- **Backend:** Python, Flask, Flask-SQLAlchemy, Flask-Login, Flask-Bcrypt, Flask-WTF
-- **Database:** SQLite (Default for development)
-- **Frontend:** HTML5/CSS3, Jinja2 Templates, Bootstrap 5, Chart.js, FontAwesome
-
----
-
-## 🚀 How to Run Locally on Your Device
-
-Follow these steps to set up and run FinSight on your own computer.
-
-### Prerequisites
-- Install **Python 3.8+**: [Download Python](https://www.python.org/downloads/)
-- Install **Git**: [Download Git](https://git-scm.com/downloads)
+Follow these steps to set up and run FinSight on your own computer:
 
 ### 1. Clone the Repository
-Open your terminal (or Command Prompt / PowerShell) and clone the project:
+Download the code to your local machine:
 ```bash
 git clone https://github.com/Bhavesh-Harad/FinSight-Personal-Finance-Investment-Intelligence-Platform.git
 cd FinSight-Personal-Finance-Investment-Intelligence-Platform
 ```
-*(If you already have the code locally, just navigate to the project directory via terminal: `cd path/to/FinSight`)*
 
-### 2. Set Up a Virtual Environment (Recommended)
-A virtual environment keeps the project's dependencies isolated from your system.
+### 2. Set Up a Virtual Environment
+A virtual environment ensures the project dependencies don't interfere with your system's Python installation.
 ```bash
 python -m venv venv
+
+# Activate on Windows:
+venv\Scripts\activate
+
+# Activate on macOS/Linux:
+source venv/bin/activate
 ```
 
-**Activate the virtual environment:**
-- **On Windows:**
-  ```bash
-  venv\Scripts\activate
-  ```
-- **On macOS/Linux:**
-  ```bash
-  source venv/bin/activate
-  ```
-
 ### 3. Install Dependencies
-Install all the required Python packages listed in `requirements.txt`:
+Install all the required Python libraries using `pip`:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Set Up Environment Variables (Optional but recommended)
-Create a `.env` file in the root directory and add a secret key for Flask security:
+### 4. Recreate the Hidden Configuration Files
+For security reasons, some files (like passwords and databases) are ignored by Git (using the `.gitignore` file) and are not uploaded to GitHub. **You must recreate them to run the app:**
+
+**A. The Environment File (`.env`)**
+Create a new file named `.env` in the main project folder. Open it in a text editor and add a secret key for Flask security:
 ```env
-SECRET_KEY=your_very_secret_key_here
+SECRET_KEY=your_secure_random_secret_key_here
 ```
 
+**B. The Database File (`instance/finsight.db`)**
+You do *not* need to create the database file manually. When you run the application for the very first time, the code will automatically create the `instance` folder and generate the `finsight.db` database for you!
+
 ### 5. Run the Application
-Start the Flask development server.
+Once everything is set up, start the server:
 ```bash
 python run.py
 ```
-*(Note: The SQLite database `finsight.db` will be automatically generated inside the `instance/` folder the first time you run the app).*
 
-### 6. Access the App
-Open your favorite web browser and go to:
+### 6. View the App
+Open your web browser and go to:
 **[http://127.0.0.1:5000](http://127.0.0.1:5000)**
 
-You can now register a new account and start tracking your finances!
+You can now register a new account and explore FinSight!
