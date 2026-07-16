@@ -116,6 +116,7 @@ class Investment(db.Model):
     purchase_price = db.Column(db.Float, nullable=False) # Price per unit
     quantity = db.Column(db.Float, nullable=False) # Number of units
     current_price = db.Column(db.Float, nullable=False) # Current price per unit
+    last_updated = db.Column(db.DateTime, nullable=True) # When the price was last updated
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 

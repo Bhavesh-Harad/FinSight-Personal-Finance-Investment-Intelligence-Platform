@@ -17,3 +17,6 @@ class Config:
     # Google OAuth Configuration
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+    
+    # Scheduler Configuration
+    SCHEDULER_API_ENABLED = True

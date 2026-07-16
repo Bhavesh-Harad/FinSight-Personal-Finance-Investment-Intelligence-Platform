@@ -38,6 +38,9 @@
                     <div>
                         <h6 class="text-muted text-uppercase fw-bold mb-2">Current Value</h6>
                         <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(current_value) }}</h3>
+                        {% if latest_update %}
+                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;"><i class="fa-regular fa-clock me-1"></i>Updated: {{ latest_update.strftime('%Y-%m-%d %H:%M UTC') }}</small>
+                        {% endif %}
                     </div>
                     <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info">
                         <i class="fa-solid fa-sack-dollar fa-lg"></i>

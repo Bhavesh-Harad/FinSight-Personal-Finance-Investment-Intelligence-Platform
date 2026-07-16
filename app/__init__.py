@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mail import Mail
 from authlib.integrations.flask_client import OAuth
+from flask_apscheduler import APScheduler
 from config import Config
 
 db = SQLAlchemy()
@@ -13,6 +14,7 @@ login_manager.login_view = 'auth.login'
 login_manager.login_message_category = 'info'
 mail = Mail()
 oauth = OAuth()
+scheduler = APScheduler()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -23,6 +25,11 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     mail.init_app(app)
     oauth.init_app(app)
+    try:
+        scheduler.init_app(app)
+        scheduler.start()
+    except Exception:
+        pass
     
     oauth.register(
         name='google',
@@ -47,5 +54,8 @@ def create_app(config_class=Config):
     app.register_blueprint(incomes)
     app.register_blueprint(investments)
     app.register_blueprint(goals)
+
+    # Import tasks to ensure scheduler registers them
+    from app import tasks
 
     return app

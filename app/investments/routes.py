@@ -5,20 +5,7 @@ from app.models import Investment, Expense
 from app.investments.forms import InvestmentForm
 import yfinance as yf
 
-def update_investment_prices(investments):
-    updated = False
-    for inv in investments:
-        if inv.symbol:
-            try:
-                ticker = yf.Ticker(inv.symbol.strip().upper())
-                last_price = ticker.fast_info['lastPrice']
-                if last_price and last_price > 0:
-                    inv.current_price = float(last_price)
-                    updated = True
-            except Exception as e:
-                pass
-    if updated:
-        db.session.commit()
+
 
 investments = Blueprint('investments', __name__)
 
@@ -26,14 +13,19 @@ investments = Blueprint('investments', __name__)
 @login_required
 def dashboard():
     all_investments = Investment.query.filter_by(user_id=current_user.id).order_by(Investment.purchase_date.desc()).all()
-    
-    # Update prices live from Yahoo Finance
-    update_investment_prices(all_investments)
-    
+
     total_invested = sum(i.total_invested() for i in all_investments)
     current_value = sum(i.current_value() for i in all_investments)
     total_return = current_value - total_invested
     percentage_return = (total_return / total_invested * 100) if total_invested > 0 else 0
+    
+    # Calculate most recent update time
+    latest_update = None
+    for i in all_investments:
+        if i.last_updated:
+            if not latest_update or i.last_updated > latest_update:
+                latest_update = i.last_updated
+    
     
     # Asset Allocation
     allocation = {}
@@ -49,7 +41,8 @@ def dashboard():
                            current_value=current_value,
                            total_return=total_return,
                            percentage_return=percentage_return,
-                           pie_labels=pie_labels, pie_data=pie_data)
+                           pie_labels=pie_labels, pie_data=pie_data,
+                           latest_update=latest_update)
 
 @investments.route("/investment/new", methods=['GET', 'POST'])
 @login_required
@@ -60,12 +53,15 @@ def new_investment():
         available_savings = current_user.get_available_savings()
         
         current_price = form.current_price.data
+        last_updated = None
         if not current_price and form.symbol.data:
             try:
                 ticker = yf.Ticker(form.symbol.data.strip().upper())
                 last_price = ticker.fast_info['lastPrice']
                 if last_price and last_price > 0:
                     current_price = float(last_price)
+                    from datetime import datetime
+                    last_updated = datetime.utcnow()
             except Exception:
                 pass
         
@@ -75,7 +71,7 @@ def new_investment():
         inv = Investment(name=form.name.data, symbol=form.symbol.data,
                          asset_class=form.asset_class.data, purchase_date=form.purchase_date.data,
                          purchase_price=form.purchase_price.data, quantity=form.quantity.data,
-                         current_price=current_price, user_id=current_user.id)
+                         current_price=current_price, last_updated=last_updated, user_id=current_user.id)
         db.session.add(inv)
         
         # Log as an expense
@@ -111,12 +107,15 @@ def update_investment(inv_id):
         available_savings = current_user.get_available_savings()
         
         current_price = form.current_price.data
+        last_updated = None
         if not current_price and form.symbol.data:
             try:
                 ticker = yf.Ticker(form.symbol.data.strip().upper())
                 last_price = ticker.fast_info['lastPrice']
                 if last_price and last_price > 0:
                     current_price = float(last_price)
+                    from datetime import datetime
+                    last_updated = datetime.utcnow()
             except Exception:
                 pass
         
@@ -130,6 +129,8 @@ def update_investment(inv_id):
         inv.purchase_price = form.purchase_price.data
         inv.quantity = form.quantity.data
         inv.current_price = current_price
+        if last_updated:
+            inv.last_updated = last_updated
         
         # Log the difference as an expense (or refund if negative)
         if cost_difference > 0:
