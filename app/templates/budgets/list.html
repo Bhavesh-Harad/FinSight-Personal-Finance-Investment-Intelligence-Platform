@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Budgets</h2>
+        <p class="text-muted">Track your spending limits</p>
+    </div>
+    <a href="{{ url_for('budgets.new_budget') }}" class="btn btn-primary shadow-sm"><i class="fa-solid fa-plus me-1"></i> Add Budget</a>
+</div>
+
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-body bg-light rounded">
+        <form method="GET" action="" class="row g-3 align-items-end justify-content-center">
+            <div class="col-md-3">
+                <label for="month" class="form-label fw-medium text-muted small text-uppercase">Month</label>
+                <select name="month" id="month" class="form-select">
+                    {% for m in range(1, 13) %}
+                    <option value="{{ m }}" {% if month == m %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="year" class="form-label fw-medium text-muted small text-uppercase">Year</label>
+                <input type="number" name="year" id="year" class="form-control" value="{{ year }}" min="2000" max="2100">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-secondary w-100">View Budgets</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% if budgets %}
+        {% for item in budgets %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 fs-6">{{ item.budget.category }}</span>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link text-muted text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                <li><a class="dropdown-item text-primary" href="{{ url_for('budgets.update_budget', budget_id=item.budget.id) }}"><i class="fa-solid fa-pen me-2"></i>Edit</a></li>
+                                <li>
+                                    <form action="{{ url_for('budgets.delete_budget', budget_id=item.budget.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete this budget?');"><i class="fa-solid fa-trash me-2"></i>Delete</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <h2 class="fw-bold mb-1">₹{{ "%.2f"|format(item.budget.amount) }}</h2>
+                    <p class="text-muted small mb-4">Budget Limit</p>
+                    
+                    <div class="d-flex justify-content-between text-muted small mb-1 fw-medium">
+                        <span>Spent: ₹{{ "%.2f"|format(item.spent) }}</span>
+                        <span class="{% if item.percentage > 100 %}text-danger{% endif %}">{{ item.percentage }}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar {{ item.alert_class }}" role="progressbar" style="width: {{ item.percentage }}%" aria-valuenow="{{ item.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    {% if item.percentage > 100 %}
+                        <div class="alert alert-danger mt-3 mb-0 py-2 small shadow-sm border-0"><i class="fa-solid fa-circle-exclamation me-1"></i> Budget Exceeded!</div>
+                    {% elif item.percentage > 80 %}
+                        <div class="alert alert-warning mt-3 mb-0 py-2 small shadow-sm border-0"><i class="fa-solid fa-triangle-exclamation me-1"></i> Approaching Limit</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="card shadow-sm border-0 py-5">
+                <div class="card-body text-center">
+                    <div class="text-muted mb-3"><i class="fa-solid fa-bullseye fa-4x text-light"></i></div>
+                    <h5 class="fw-bold">No budgets found</h5>
+                    <p class="text-muted">You haven't set any budgets for {{ month }}/{{ year }}.</p>
+                    <a href="{{ url_for('budgets.new_budget') }}" class="btn btn-primary mt-2">Create a Budget</a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

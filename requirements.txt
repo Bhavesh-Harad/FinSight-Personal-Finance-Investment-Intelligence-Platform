@@ -1,0 +1,11 @@
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+Flask-Bcrypt==1.0.1
+email-validator==2.1.1
+python-dotenv==1.0.1
+Flask-Mail==0.10.0
+Authlib==1.7.2
+requests==2.34.2
+itsdangerous==2.2.0

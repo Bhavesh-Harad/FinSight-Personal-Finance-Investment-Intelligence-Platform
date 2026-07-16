@@ -1,0 +1,174 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+/* Sidebar Styling */
+#wrapper {
+    overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    width: 250px;
+    transition: margin 0.25s ease-out;
+    background-color: #1a1c23 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sidebar-link {
+    border: none;
+    transition: all 0.2s;
+    font-weight: 500;
+    color: #a0aec0 !important;
+}
+
+.sidebar-link:hover {
+    background-color: #2d3748 !important;
+    color: #fff !important;
+    padding-left: 1.5rem !important;
+}
+
+.sidebar-link.active {
+    background: linear-gradient(90deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%) !important;
+    color: #667eea !important;
+    border-left: 4px solid #667eea;
+}
+
+/* Auth Background and Split Layout */
+.auth-bg {
+    background-color: #f8f9fc;
+}
+
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+}
+
+.auth-image {
+    flex: 1;
+    background: url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center center / cover no-repeat;
+    position: relative;
+    display: none;
+}
+
+@media (min-width: 992px) {
+    .auth-image {
+        display: block;
+    }
+}
+
+.auth-image-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 3rem;
+    text-align: center;
+}
+
+.auth-form-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    background-color: #ffffff;
+    /* Add subtle shapes/icons background pattern */
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(102, 126, 234, 0.04) 0%, rgba(102, 126, 234, 0.04) 25%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(118, 75, 162, 0.04) 0%, rgba(118, 75, 162, 0.04) 20%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(102, 126, 234, 0.05) 0%, rgba(102, 126, 234, 0.05) 15%, transparent 15%);
+    background-size: 100% 100%;
+    max-width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+@media (min-width: 992px) {
+    .auth-form-container {
+        max-width: 50%;
+        padding: 4rem;
+    }
+}
+
+.auth-card {
+    border-radius: 15px;
+    border: none;
+    box-shadow: none; /* Removed shadow since it's on white bg */
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+/* Cards */
+.card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-weight: 600;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.8em;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* Tables */
+.table th {
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Progress Bars */
+.progress {
+    height: 10px;
+    border-radius: 5px;
+    background-color: #e2e8f0;
+}
+
+/* Toggle Menu */
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+}
+
+@media (max-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: -250px;
+    }
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
+}

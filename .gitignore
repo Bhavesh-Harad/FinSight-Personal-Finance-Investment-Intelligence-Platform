@@ -1,0 +1,18 @@
+# Secrets and config
+.env
+
+# Database and local Flask instance data
+instance/*
+!instance/.keep
+
+# Virtual environment
+venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs
+.vscode/
+.idea/

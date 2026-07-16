@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Expenses</h2>
+        <p class="text-muted">Manage your transactions</p>
+    </div>
+    <a href="{{ url_for('expenses.new_expense') }}" class="btn btn-primary shadow-sm"><i class="fa-solid fa-plus me-1"></i> Add Expense</a>
+</div>
+
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-body bg-light rounded">
+        <form method="GET" action="" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="category" class="form-label fw-medium text-muted small text-uppercase">Filter by Category</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">All Categories</option>
+                    <option value="Food" {% if request.args.get('category') == 'Food' %}selected{% endif %}>Food</option>
+                    <option value="Transport" {% if request.args.get('category') == 'Transport' %}selected{% endif %}>Transport</option>
+                    <option value="Housing" {% if request.args.get('category') == 'Housing' %}selected{% endif %}>Housing</option>
+                    <option value="Utilities" {% if request.args.get('category') == 'Utilities' %}selected{% endif %}>Utilities</option>
+                    <option value="Entertainment" {% if request.args.get('category') == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+                    <option value="Healthcare" {% if request.args.get('category') == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+                    <option value="Other" {% if request.args.get('category') == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="sort_by" class="form-label fw-medium text-muted small text-uppercase">Sort By</label>
+                <select name="sort_by" id="sort_by" class="form-select">
+                    <option value="date_desc" {% if request.args.get('sort_by') == 'date_desc' %}selected{% endif %}>Date (Newest First)</option>
+                    <option value="date_asc" {% if request.args.get('sort_by') == 'date_asc' %}selected{% endif %}>Date (Oldest First)</option>
+                    <option value="amount_desc" {% if request.args.get('sort_by') == 'amount_desc' %}selected{% endif %}>Amount (High to Low)</option>
+                    <option value="amount_asc" {% if request.args.get('sort_by') == 'amount_asc' %}selected{% endif %}>Amount (Low to High)</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-secondary w-100">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        {% if expenses %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Title</th>
+                        <th>Category</th>
+                        <th>Payment Mode</th>
+                        <th>Date</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-center pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ expense.title }}</div>
+                            {% if expense.description %}
+                            <small class="text-muted text-truncate d-inline-block" style="max-width: 200px;">{{ expense.description }}</small>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">{{ expense.category }}</span></td>
+                        <td><small class="text-muted border rounded px-2 py-1 bg-light">{{ expense.payment_mode }}</small></td>
+                        <td>{{ expense.date.strftime('%Y-%m-%d') }}</td>
+                        <td class="text-end fw-bold text-danger">-₹{{ "%.2f"|format(expense.amount) }}</td>
+                        <td class="text-center pe-4">
+                            <a href="{{ url_for('expenses.update_expense', expense_id=expense.id) }}" class="btn btn-sm btn-outline-primary me-1"><i class="fa-solid fa-pen"></i></a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ expense.id }}">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteModal{{ expense.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ expense.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header border-0">
+                                    <h5 class="modal-title fw-bold" id="deleteModalLabel{{ expense.id }}">Confirm Delete</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete the expense "<strong>{{ expense.title }}</strong>"? This action cannot be undone.
+                                </div>
+                                <div class="modal-footer border-0">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                    <form action="{{ url_for('expenses.delete_expense', expense_id=expense.id) }}" method="POST">
+                                        <input class="btn btn-danger" type="submit" value="Delete">
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="text-muted mb-3"><i class="fa-solid fa-receipt fa-4x text-light"></i></div>
+            <h5 class="fw-bold">No expenses found</h5>
+            <p class="text-muted">You haven't added any expenses yet or none match your filters.</p>
+            <a href="{{ url_for('expenses.new_expense') }}" class="btn btn-primary mt-2">Add Your First Expense</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

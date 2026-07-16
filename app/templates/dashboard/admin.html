@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-1">User Management</h2>
+                <p class="text-muted">Manage FinSight platform users</p>
+            </div>
+            <span class="badge bg-danger">Admin Area</span>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-4 col-md-6">
+        <div class="card border-0 shadow-sm h-100 py-2 border-primary border-start border-4">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Users</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fa-solid fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-md-6">
+        <div class="card border-0 shadow-sm h-100 py-2 border-danger border-start border-4">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Administrators</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ admins }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fa-solid fa-user-shield fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-md-6">
+        <div class="card border-0 shadow-sm h-100 py-2 border-success border-start border-4">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Regular Users</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ regular_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fa-solid fa-user fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header py-3 bg-white">
+                <h6 class="m-0 font-weight-bold text-primary">Registered Users</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined Date</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td class="ps-4">#{{ user.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if user.profile_pic.startswith('http') %}
+                                            <img src="{{ user.profile_pic }}" class="rounded-circle me-2" width="30" height="30">
+                                        {% else %}
+                                            <img src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}" class="rounded-circle me-2" width="30" height="30" style="object-fit: cover;">
+                                        {% endif %}
+                                        <span>{{ user.full_name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.role == 'Admin' %}
+                                        <span class="badge bg-danger">{{ user.role }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ user.role }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="text-end pe-4">
+                                    {% if user.id != current_user.id %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.id }}">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button>
+                                        
+                                        <!-- Delete Confirmation Modal -->
+                                        <div class="modal fade" id="deleteModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ user.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ user.id }}">Confirm Deletion</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        Are you sure you want to permanently delete user <strong>{{ user.full_name }}</strong> ({{ user.email }})?
+                                                        <br><br>
+                                                        <span class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Warning: This will also permanently delete all of their expenses and budgets. This action cannot be undone.</span>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form action="{{ url_for('main.delete_user', user_id=user.id) }}" method="POST">
+                                                            <button type="submit" class="btn btn-danger">Yes, Delete User</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-outline-secondary disabled" title="You cannot delete yourself">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold mb-1">Dashboard</h2>
+        <p class="text-muted">Welcome back, {{ current_user.full_name }}! Here's your financial overview.</p>
+    </div>
+</div>
+
+<!-- Financial Health Score Row -->
+<div class="row mb-4">
+    <div class="col-12">
+        {% set score_color = "text-success" if health_data.total_score >= 76 else ("text-warning" if health_data.total_score >= 51 else "text-danger") %}
+        {% set bg_color = "bg-success" if health_data.total_score >= 76 else ("bg-warning" if health_data.total_score >= 51 else "bg-danger") %}
+        
+        <div class="card shadow-sm border-0 bg-dark text-white rounded-4 overflow-hidden position-relative">
+            <!-- Decorative background blob -->
+            <div class="position-absolute top-0 end-0 p-5 opacity-25">
+                <i class="fa-solid fa-heart-pulse fa-10x"></i>
+            </div>
+            
+            <div class="card-body p-4 p-md-5 position-relative z-index-1">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center mb-4 mb-md-0">
+                        <h5 class="fw-bold text-white-50 mb-3 text-uppercase tracking-wide">Financial Health</h5>
+                        <div style="position: relative; width: 180px; height: 90px; margin: 0 auto;">
+                            <canvas id="healthGaugeChart"></canvas>
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center;">
+                                <span class="fs-1 fw-bold {{ score_color }}" id="healthScoreDisplay">{{ health_data.total_score }}</span><span class="fs-4 text-white-50">/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="bg-white bg-opacity-10 p-3 rounded h-100 border-start border-3 {% if health_data.breakdown.savings_rate.score == 30 %}border-success{% elif health_data.breakdown.savings_rate.score >= 15 %}border-warning{% else %}border-danger{% endif %}">
+                                    <h6 class="text-uppercase text-white-50 fw-bold mb-1 fs-7"><i class="fa-solid fa-piggy-bank me-2"></i>Savings Rate <span class="float-end">{{ health_data.breakdown.savings_rate.score }}/30</span></h6>
+                                    <small class="text-white">{{ health_data.breakdown.savings_rate.message }}</small>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="bg-white bg-opacity-10 p-3 rounded h-100 border-start border-3 {% if health_data.breakdown.emergency_fund.score == 30 %}border-success{% elif health_data.breakdown.emergency_fund.score >= 15 %}border-warning{% else %}border-danger{% endif %}">
+                                    <h6 class="text-uppercase text-white-50 fw-bold mb-1 fs-7"><i class="fa-solid fa-shield-halved me-2"></i>Emergency Fund <span class="float-end">{{ health_data.breakdown.emergency_fund.score }}/30</span></h6>
+                                    <small class="text-white">{{ health_data.breakdown.emergency_fund.message }}</small>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="bg-white bg-opacity-10 p-3 rounded h-100 border-start border-3 {% if health_data.breakdown.budget_adherence.score == 20 %}border-success{% elif health_data.breakdown.budget_adherence.score >= 10 %}border-warning{% else %}border-danger{% endif %}">
+                                    <h6 class="text-uppercase text-white-50 fw-bold mb-1 fs-7"><i class="fa-solid fa-scale-balanced me-2"></i>Budget Adherence <span class="float-end">{{ health_data.breakdown.budget_adherence.score }}/20</span></h6>
+                                    <small class="text-white">{{ health_data.breakdown.budget_adherence.message }}</small>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="bg-white bg-opacity-10 p-3 rounded h-100 border-start border-3 {% if health_data.breakdown.investment_focus.score == 20 %}border-success{% elif health_data.breakdown.investment_focus.score >= 10 %}border-warning{% else %}border-danger{% endif %}">
+                                    <h6 class="text-uppercase text-white-50 fw-bold mb-1 fs-7"><i class="fa-solid fa-rocket me-2"></i>Asset Focus <span class="float-end">{{ health_data.breakdown.investment_focus.score }}/20</span></h6>
+                                    <small class="text-white">{{ health_data.breakdown.investment_focus.message }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards Row -->
+<div class="row g-4 mb-4">
+    <!-- Income -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-primary border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Income</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_income) }}</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                        <i class="fa-solid fa-money-bill-trend-up fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Planned Savings -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-success border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Planned Savings</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(planned_savings) }}</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                        <i class="fa-solid fa-piggy-bank fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Actual Savings -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-info border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Actual Savings</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(actual_savings) }}</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info">
+                        <i class="fa-solid fa-vault fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Budget -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-warning border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Budget</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_budget) }}</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                        <i class="fa-solid fa-bullseye fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Spent -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-danger border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Spent</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_spent) }}</h3>
+                    </div>
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-circle text-danger">
+                        <i class="fa-solid fa-wallet fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Remaining Budget -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-secondary border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Remaining Budget</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_budget - total_spent) if total_budget > 0 else 0.00 }}</h3>
+                    </div>
+                    <div class="bg-secondary bg-opacity-10 p-3 rounded-circle text-secondary">
+                        <i class="fa-solid fa-coins fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <!-- Line Chart: 6 Month Trend -->
+    <div class="col-12">
+        <div class="card shadow-sm h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+                <h6 class="m-0 font-weight-bold text-primary">Spending Trend (Last 6 Months)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area" style="position: relative; height:300px; width:100%">
+                    <canvas id="myAreaChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie Chart: Category Breakdown -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+                <h6 class="m-0 font-weight-bold text-primary">Spending by Category (This Month)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4 pb-2" style="position: relative; height:250px; width:100%">
+                    {% if pie_data %}
+                        <canvas id="myPieChart"></canvas>
+                    {% else %}
+                        <div class="d-flex h-100 align-items-center justify-content-center text-muted">
+                            <p>No expenses recorded this month.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie Chart: Payment Mode Breakdown -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+                <h6 class="m-0 font-weight-bold text-primary">Spending by Payment Mode (This Month)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4 pb-2" style="position: relative; height:250px; width:100%">
+                    {% if pm_pie_data %}
+                        <canvas id="myPaymentModeChart"></canvas>
+                    {% else %}
+                        <div class="d-flex h-100 align-items-center justify-content-center text-muted">
+                            <p>No expenses recorded this month.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Budget Widgets -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Budget Utilization</h6>
+                <a href="{{ url_for('budgets.list_budgets') }}" class="btn btn-sm btn-outline-primary">Manage</a>
+            </div>
+            <div class="card-body">
+                {% if budget_progress %}
+                    {% for item in budget_progress %}
+                        <h4 class="small font-weight-bold">{{ item.category }} <span
+                                class="float-end">₹{{ "%.2f"|format(item.spent) }} / ₹{{ "%.2f"|format(item.amount) }}</span></h4>
+                        <div class="progress mb-4">
+                            <div class="progress-bar {{ item.alert_class }}" role="progressbar" style="width: {{ item.percentage }}%"
+                                aria-valuenow="{{ item.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center my-4">No budgets set for this month.</p>
+                    <div class="text-center">
+                        <a href="{{ url_for('budgets.new_budget') }}" class="btn btn-primary btn-sm">Create Budget</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                <a href="{{ url_for('expenses.list_expenses') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-borderless mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in recent_transactions %}
+                            <tr>
+                                <td><span class="fw-medium">{{ expense.title }}</span></td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-25 text-dark">{{ expense.category }}</span>
+                                </td>
+                                <td>{{ expense.date.strftime('%b %d, %Y') }}</td>
+                                <td class="text-end fw-bold text-danger">-₹{{ "%.2f"|format(expense.amount) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center my-4">No recent transactions.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <!-- Quick Add Expense -->
+    <div class="col-xl-12 col-lg-12">
+        <div class="card shadow-sm mb-4 h-100">
+            <div class="card-header py-3 bg-white border-bottom-0">
+                <h6 class="m-0 font-weight-bold text-primary">Quick Add Expense</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            {{ form.title(class="form-control form-control-sm", placeholder="Title") }}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light border-end-0">₹</span>
+                                {{ form.amount(class="form-control border-start-0", placeholder="Amount") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            {{ form.category(class="form-select form-select-sm") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.payment_mode(class="form-select form-select-sm") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.date(class="form-control form-control-sm", type="date") }}
+                        </div>
+                    </div>
+                    <div class="d-none">
+                        {{ form.description(class="form-control") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Add Expense</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set default Chart.js font
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#858796';
+
+    {% if bar_labels and bar_data %}
+    // Bar/Area Chart
+    var ctx = document.getElementById("myAreaChart");
+    if (ctx) {
+        var myLineChart = new Chart(ctx, {
+            type: 'bar', // Using bar for better visual
+            data: {
+                labels: {{ bar_labels|safe }},
+                datasets: [{
+                    label: "Expenses",
+                    backgroundColor: "#667eea",
+                    hoverBackgroundColor: "#764ba2",
+                    borderColor: "#4e73df",
+                    data: {{ bar_data|safe }},
+                    borderRadius: 4
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            callback: function(value, index, values) {
+                                return '₹' + value;
+                            }
+                        },
+                        grid: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+
+    {% if pie_labels and pie_data %}
+    // Pie Chart
+    var ctxPie = document.getElementById("myPieChart");
+    if (ctxPie) {
+        var myPieChart = new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: {{ pie_labels|safe }},
+                datasets: [{
+                    data: {{ pie_data|safe }},
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69'],
+                    hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617', '#60616f', '#373840'],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        }
+                    }
+                }
+            },
+        });
+    }
+    {% endif %}
+    {% if pm_pie_labels and pm_pie_data %}
+    // Payment Mode Pie Chart
+    var ctxPmPie = document.getElementById("myPaymentModeChart");
+    if (ctxPmPie) {
+        var myPaymentModeChart = new Chart(ctxPmPie, {
+            type: 'doughnut',
+            data: {
+                labels: {{ pm_pie_labels|safe }},
+                datasets: [{
+                    data: {{ pm_pie_data|safe }},
+                    backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b', '#4e73df', '#36b9cc'],
+                    hoverBackgroundColor: ['#17a673', '#dda20a', '#be2617', '#2e59d9', '#2c9faf'],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        }
+                    }
+                }
+            },
+        });
+    }
+    {% endif %}
+
+    // --- Financial Health Gauge Chart ---
+    var healthScore = {{ health_data.total_score }};
+    var gaugeColor = healthScore >= 76 ? '#198754' : (healthScore >= 51 ? '#ffc107' : '#dc3545');
+    
+    var healthCtx = document.getElementById('healthGaugeChart');
+    if (healthCtx) {
+        new Chart(healthCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [healthScore, 100 - healthScore],
+                    backgroundColor: [gaugeColor, 'rgba(255, 255, 255, 0.1)'],
+                    borderWidth: 0,
+                    circumference: 180,
+                    rotation: 270,
+                    cutout: '80%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: false
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-primary">{{ legend }}</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label fw-bold") }}
+                        {% if form.name.errors %}
+                            {{ form.name(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.name(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.symbol.label(class="form-label fw-bold") }}
+                            {% if form.symbol.errors %}
+                                {{ form.symbol(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.symbol.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.symbol(class="form-control", placeholder="e.g., AAPL, VOO") }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.asset_class.label(class="form-label fw-bold") }}
+                            {% if form.asset_class.errors %}
+                                {{ form.asset_class(class="form-select is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.asset_class.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.asset_class(class="form-select") }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            {{ form.purchase_date.label(class="form-label fw-bold") }}
+                            {% if form.purchase_date.errors %}
+                                {{ form.purchase_date(class="form-control is-invalid", type="date") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.purchase_date.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.purchase_date(class="form-control", type="date") }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.quantity.label(class="form-label fw-bold") }}
+                            {% if form.quantity.errors %}
+                                {{ form.quantity(class="form-control is-invalid", type="number", step="0.01") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.quantity.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.quantity(class="form-control", type="number", step="0.01") }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.purchase_price.label(class="form-label fw-bold") }}
+                            {% if form.purchase_price.errors %}
+                                {{ form.purchase_price(class="form-control is-invalid", type="number", step="0.01") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.purchase_price.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.purchase_price(class="form-control", type="number", step="0.01") }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.current_price.label(class="form-label fw-bold text-success") }}
+                        {% if form.current_price.errors %}
+                            {{ form.current_price(class="form-control is-invalid border-success", type="number", step="0.01") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.current_price.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.current_price(class="form-control border-success", type="number", step="0.01") }}
+                        {% endif %}
+                        <small id="priceHelp" class="text-muted"><i class="fa-solid fa-magic me-1"></i> Leave blank to auto-fetch from Yahoo Finance when saving.</small>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <a href="{{ url_for('investments.dashboard') }}" class="btn btn-light">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const symbolInput = document.getElementById("symbol");
+    const currentPriceInput = document.getElementById("current_price");
+    const priceHelp = document.getElementById("priceHelp");
+
+    if (symbolInput) {
+        symbolInput.addEventListener("blur", function() {
+            const symbol = symbolInput.value.trim();
+            if (symbol) {
+                priceHelp.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-primary me-1"></i> Fetching live price...';
+                
+                fetch(`/api/price/${symbol}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error("Price not found");
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.price) {
+                            currentPriceInput.value = data.price.toFixed(2);
+                            currentPriceInput.classList.add("bg-success", "bg-opacity-10");
+                            priceHelp.innerHTML = '<i class="fa-solid fa-check-circle text-success me-1"></i> Live price fetched from Yahoo Finance!';
+                            
+                            setTimeout(() => {
+                                currentPriceInput.classList.remove("bg-success", "bg-opacity-10");
+                            }, 1500);
+                        }
+                    })
+                    .catch(error => {
+                        priceHelp.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Could not fetch price. Enter manually or leave blank to fallback to Purchase Price.';
+                    });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    {% if current_user.profile_pic.startswith('http') %}
+                        <img src="{{ current_user.profile_pic }}" alt="Profile Picture" class="rounded-circle mb-3 border shadow-sm" width="120" height="120" style="object-fit: cover;">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='profile_pics/' + current_user.profile_pic) }}" alt="Profile Picture" class="rounded-circle mb-3 border shadow-sm" width="120" height="120" style="object-fit: cover;">
+                    {% endif %}
+                    <h3 class="fw-bold">{{ current_user.full_name }}</h3>
+                    <p class="text-muted">{{ current_user.email }}</p>
+                </div>
+                
+                <hr>
+                
+                <h5 class="fw-bold mb-3 mt-4">Update Profile Info</h5>
+                <form method="POST" action="" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4 text-center">
+                        {{ form.picture.label(class="form-label") }}
+                        {% if form.picture.errors %}
+                            {{ form.picture(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.picture.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.picture(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.full_name.label(class="form-label") }}
+                        {% if form.full_name.errors %}
+                            {{ form.full_name(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.full_name.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.full_name(class="form-control") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.email.label(class="form-label") }}
+                        {% if form.email.errors %}
+                            {{ form.email(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.email(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    
+                    <h6 class="fw-bold mb-3 mt-4 text-muted border-bottom pb-2">Financial Details</h6>
+                    
+                    <div class="mb-3">
+                        {{ form.income_sources.label(class="form-label") }}
+                        {% if form.income_sources.errors %}
+                            {{ form.income_sources(class="form-control is-invalid", rows="3") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.income_sources.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.income_sources(class="form-control", rows="3", placeholder="E.g. Salary, Freelance, Investments...") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.financial_preferences.label(class="form-label") }}
+                        {% if form.financial_preferences.errors %}
+                            {{ form.financial_preferences(class="form-control is-invalid", rows="3") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.financial_preferences.errors %}
+                                    <span>{{ error }}</span>
+                                </br>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.financial_preferences(class="form-control", rows="3", placeholder="E.g. Save 20% of income, reduce dining out...") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

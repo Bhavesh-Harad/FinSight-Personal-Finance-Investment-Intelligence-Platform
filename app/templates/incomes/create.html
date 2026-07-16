@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-primary"><i class="fa-solid fa-plus-circle me-2"></i> Add Income</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label fw-medium") }}
+                        {% if form.title.errors %}
+                            {{ form.title(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.title.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.title(class="form-control", placeholder="E.g., June Salary") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.amount.label(class="form-label fw-medium") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">₹</span>
+                                {% if form.amount.errors %}
+                                    {{ form.amount(class="form-control is-invalid") }}
+                                {% else %}
+                                    {{ form.amount(class="form-control", placeholder="0.00") }}
+                                {% endif %}
+                            </div>
+                            {% if form.amount.errors %}
+                                <div class="d-block invalid-feedback">
+                                    {% for error in form.amount.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.date.label(class="form-label fw-medium") }}
+                            {% if form.date.errors %}
+                                {{ form.date(class="form-control is-invalid", type="date") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.date.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.date(class="form-control", type="date") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.source.label(class="form-label fw-medium") }}
+                        {% if form.source.errors %}
+                            {{ form.source(class="form-select is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.source.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.source(class="form-select") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.description.label(class="form-label fw-medium") }}
+                        {% if form.description.errors %}
+                            {{ form.description(class="form-control is-invalid", rows="3") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.description(class="form-control", rows="3", placeholder="Optional details...") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('incomes.list_incomes') }}" class="btn btn-outline-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary px-4") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
