@@ -70,6 +70,13 @@ def delete_goal(goal_id):
     if goal.author != current_user:
         flash('Unauthorized action.', 'danger')
         return redirect(url_for('goals.dashboard'))
+    # If the goal has money in it, refund it back to savings
+    if goal.current_amount > 0:
+        desc = f"Goal Deleted: Refund from {goal.name}"
+        i = Income(title=desc, amount=goal.current_amount, source="Savings Goal",
+                   date=datetime.utcnow().date(), user_id=current_user.id)
+        db.session.add(i)
+        
     db.session.delete(goal)
     db.session.commit()
     flash('Goal deleted successfully!', 'success')
@@ -89,6 +96,10 @@ def deposit_funds(goal_id):
         available_savings = current_user.get_available_savings()
         
 
+        if deposit_amount > available_savings:
+            flash(f'Error: You tried to deposit ₹{deposit_amount:,.2f}, which exceeds your available accumulated savings of ₹{available_savings:,.2f}!', 'danger')
+            return redirect(url_for('goals.dashboard'))
+            
         goal.current_amount += deposit_amount
         
         # Log as an expense
@@ -100,10 +111,7 @@ def deposit_funds(goal_id):
         
         db.session.commit()
         
-        if deposit_amount > available_savings:
-            flash(f'Warning: You deposited ₹{deposit_amount:,.2f}, which exceeds your available savings of ₹{available_savings:,.2f}!', 'danger')
-        else:
-            flash(f'Successfully transferred ₹{deposit_amount:,.2f} from Savings to {goal.name}!', 'success')
+        flash(f'Successfully transferred ₹{deposit_amount:,.2f} from Savings to {goal.name}!', 'success')
         return redirect(url_for('goals.dashboard'))
         
     return render_template('goals/deposit.html', title='Deposit Funds', form=form, goal=goal)

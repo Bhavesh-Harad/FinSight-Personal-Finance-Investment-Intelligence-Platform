@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, url_for, flash, redirect, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import Investment, Expense
+from app.models import Investment, Expense, Income
+from datetime import datetime
 from app.investments.forms import InvestmentForm
 import yfinance as yf
 
@@ -68,6 +69,10 @@ def new_investment():
         if not current_price:
             current_price = form.purchase_price.data
         
+        if total_cost > available_savings:
+            flash(f'Error: This investment of ${total_cost:,.2f} exceeds your available accumulated savings of ${available_savings:,.2f}!', 'danger')
+            return redirect(url_for('investments.dashboard'))
+            
         inv = Investment(name=form.name.data, symbol=form.symbol.data,
                          asset_class=form.asset_class.data, purchase_date=form.purchase_date.data,
                          purchase_price=form.purchase_price.data, quantity=form.quantity.data,
@@ -83,11 +88,7 @@ def new_investment():
         
         db.session.commit()
         
-        if total_cost > available_savings:
-            flash(f'Warning: This investment of ${total_cost:,.2f} exceeds your available savings of ${available_savings:,.2f}!', 'danger')
-        else:
-            flash('Investment added successfully!', 'success')
-            
+        flash('Investment added successfully!', 'success')
         return redirect(url_for('investments.dashboard'))
     return render_template('investments/create_edit.html', title='New Investment', form=form, legend='New Investment')
 
@@ -122,6 +123,10 @@ def update_investment(inv_id):
         if not current_price:
             current_price = form.purchase_price.data
 
+        if cost_difference > available_savings:
+            flash(f'Error: This update requires ${cost_difference:,.2f} of new capital, which exceeds your available accumulated savings of ${available_savings:,.2f}!', 'danger')
+            return redirect(url_for('investments.dashboard'))
+
         inv.name = form.name.data
         inv.symbol = form.symbol.data
         inv.asset_class = form.asset_class.data
@@ -142,10 +147,7 @@ def update_investment(inv_id):
         
         db.session.commit()
         
-        if cost_difference > available_savings:
-            flash(f'Warning: This update requires ${cost_difference:,.2f} of new capital, which exceeds your available savings of ${available_savings:,.2f}!', 'danger')
-        else:
-            flash('Investment updated successfully!', 'success')
+        flash('Investment updated successfully!', 'success')
         return redirect(url_for('investments.dashboard'))
     elif request.method == 'GET':
         form.name.data = inv.name
@@ -164,6 +166,14 @@ def delete_investment(inv_id):
     if inv.author != current_user:
         flash('Unauthorized action.', 'danger')
         return redirect(url_for('investments.dashboard'))
+    # Refund the invested amount back to savings
+    refund_amount = inv.total_invested()
+    if refund_amount > 0:
+        desc = f"Investment Deleted/Sold: Refund from {inv.name}"
+        i = Income(title=desc, amount=refund_amount, source="Investment",
+                   date=datetime.utcnow().date(), user_id=current_user.id)
+        db.session.add(i)
+        
     db.session.delete(inv)
     db.session.commit()
     flash('Investment deleted successfully!', 'success')

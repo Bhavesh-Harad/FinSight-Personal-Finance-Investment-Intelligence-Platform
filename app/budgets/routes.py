@@ -25,7 +25,7 @@ def list_budgets():
     
     for b in user_budgets:
         expenses = Expense.query.filter_by(user_id=current_user.id).all()
-        monthly_expenses = [e for e in expenses if e.date.month == b.month and e.date.year == b.year]
+        monthly_expenses = [e for e in expenses if e.date.month == b.month and e.date.year == b.year and e.category not in ['Savings Goal', 'Investment']]
         
         if b.category == 'Overall':
             spent = sum(e.amount for e in monthly_expenses)

@@ -35,17 +35,12 @@ def list_expenses():
 def new_expense():
     form = ExpenseForm()
     if form.validate_on_submit():
-        expense = Expense(title=form.title.data, amount=form.amount.data, 
-                          category=form.category.data, payment_mode=form.payment_mode.data,
-                          date=form.date.data, description=form.description.data, 
-                          user_id=current_user.id)
-        db.session.add(expense)
-        
         # Check if expense exceeds budget
         monthly_expenses = Expense.query.filter(
             Expense.user_id == current_user.id,
             db.extract('month', Expense.date) == form.date.data.month,
-            db.extract('year', Expense.date) == form.date.data.year
+            db.extract('year', Expense.date) == form.date.data.year,
+            Expense.category.notin_(['Savings Goal', 'Investment'])
         ).all()
         
         category_budget = Budget.query.filter_by(
@@ -81,24 +76,30 @@ def new_expense():
         if category_budget:
             category_spent = sum(e.amount for e in monthly_expenses if e.category == form.category.data) + form.amount.data
             if category_spent > category_budget.amount:
-                flash(f'Warning: This expense exceeds your {form.category.data} budget limit!', 'warning')
+                flash(f'Error: This expense exceeds your {form.category.data} budget limit!', 'danger')
                 exceeded = True
         elif other_budget:
             # If no specific category budget, it falls under 'Other'
             other_spent = sum(e.amount for e in monthly_expenses if e.category == 'Other' or e.category not in budget_categories) + form.amount.data
             if other_spent > other_budget.amount:
-                flash(f'Warning: This expense exceeds your Other budget limit!', 'warning')
+                flash(f'Error: This expense exceeds your Other budget limit!', 'danger')
                 exceeded = True
                 
         total_spent = sum(e.amount for e in monthly_expenses) + form.amount.data
         if overall_budget and total_spent > overall_budget.amount:
-            flash(f'Warning: This expense exceeds your Overall budget limit!', 'warning')
+            flash(f'Error: This expense exceeds your Overall budget limit!', 'danger')
             exceeded = True
             
-        if not exceeded:
-            flash('Your expense has been added!', 'success')
+        if exceeded:
+            return redirect(url_for('expenses.list_expenses'))
             
+        expense = Expense(title=form.title.data, amount=form.amount.data, 
+                          category=form.category.data, payment_mode=form.payment_mode.data,
+                          date=form.date.data, description=form.description.data, 
+                          user_id=current_user.id)
+        db.session.add(expense)
         db.session.commit()
+        flash('Your expense has been added!', 'success')
         return redirect(url_for('expenses.list_expenses'))
     return render_template('expenses/create_edit.html', title='New Expense', form=form, legend='New Expense')
 
@@ -111,6 +112,64 @@ def update_expense(expense_id):
         return redirect(url_for('expenses.list_expenses'))
     form = ExpenseForm()
     if form.validate_on_submit():
+        # Check if expense exceeds budget
+        monthly_expenses = Expense.query.filter(
+            Expense.user_id == current_user.id,
+            db.extract('month', Expense.date) == form.date.data.month,
+            db.extract('year', Expense.date) == form.date.data.year,
+            Expense.category.notin_(['Savings Goal', 'Investment'])
+        ).all()
+        
+        category_budget = Budget.query.filter_by(
+            user_id=current_user.id, 
+            category=form.category.data, 
+            month=form.date.data.month, 
+            year=form.date.data.year
+        ).first()
+        
+        overall_budget = Budget.query.filter_by(
+            user_id=current_user.id, 
+            category='Overall', 
+            month=form.date.data.month, 
+            year=form.date.data.year
+        ).first()
+
+        other_budget = Budget.query.filter_by(
+            user_id=current_user.id, 
+            category='Other', 
+            month=form.date.data.month, 
+            year=form.date.data.year
+        ).first()
+        
+        all_month_budgets = Budget.query.filter_by(
+            user_id=current_user.id, 
+            month=form.date.data.month, 
+            year=form.date.data.year
+        ).all()
+        budget_categories = [b.category for b in all_month_budgets if b.category != 'Overall']
+        
+        exceeded = False
+        
+        if category_budget:
+            category_spent = sum(e.amount for e in monthly_expenses if e.category == form.category.data and e.id != expense.id) + form.amount.data
+            if category_spent > category_budget.amount:
+                flash(f'Error: This expense exceeds your {form.category.data} budget limit!', 'danger')
+                exceeded = True
+        elif other_budget:
+            # If no specific category budget, it falls under 'Other'
+            other_spent = sum(e.amount for e in monthly_expenses if (e.category == 'Other' or e.category not in budget_categories) and e.id != expense.id) + form.amount.data
+            if other_spent > other_budget.amount:
+                flash(f'Error: This expense exceeds your Other budget limit!', 'danger')
+                exceeded = True
+                
+        total_spent = sum(e.amount for e in monthly_expenses if e.id != expense.id) + form.amount.data
+        if overall_budget and total_spent > overall_budget.amount:
+            flash(f'Error: This expense exceeds your Overall budget limit!', 'danger')
+            exceeded = True
+            
+        if exceeded:
+            return redirect(url_for('expenses.list_expenses'))
+            
         expense.title = form.title.data
         expense.amount = form.amount.data
         expense.category = form.category.data

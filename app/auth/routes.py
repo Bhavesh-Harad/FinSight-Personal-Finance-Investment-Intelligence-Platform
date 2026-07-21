@@ -63,17 +63,18 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        user_data = {
-            'full_name': form.full_name.data,
-            'email': form.email.data.lower(),
-            'password_hash': hashed_password
-        }
-        if send_verification_email(user_data):
-            flash('An email has been sent with instructions to verify your account.', 'info')
-            return redirect(url_for('auth.login'))
-        else:
-            flash('Failed to send email. Please enter a valid, existing email address.', 'danger')
-            return render_template('auth/register.html', title='Register', form=form)
+        user = User(
+            full_name=form.full_name.data,
+            email=form.email.data.lower(),
+            password_hash=hashed_password,
+            is_verified=True
+        )
+        db.session.add(user)
+        db.session.commit()
+        
+        # Optionally send a welcome email if you want, but skipping it to avoid SMTP errors on local test
+        flash('Your account has been created! You can now log in.', 'success')
+        return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title='Register', form=form)
 
 @auth.route("/verify_email/<token>")

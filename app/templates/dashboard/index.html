@@ -8,6 +8,108 @@
     </div>
 </div>
 
+<h5 class="fw-bold mb-3 mt-4 text-muted border-bottom pb-2">This Month's Summary</h5>
+
+<!-- Summary Cards Row -->
+<div class="row g-4 mb-4">
+    <!-- Income -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-primary border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Income</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_income) }}</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                        <i class="fa-solid fa-money-bill-trend-up fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Planned Savings -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-success border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Planned Savings</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(planned_savings) }}</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                        <i class="fa-solid fa-piggy-bank fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Actual Savings -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-info border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Accumulated Savings</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(actual_savings) }}</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info">
+                        <i class="fa-solid fa-vault fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Budget -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-warning border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Budget</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_budget) }}</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                        <i class="fa-solid fa-bullseye fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Spent -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-danger border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Spent</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_spent) }}</h3>
+                    </div>
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-circle text-danger">
+                        <i class="fa-solid fa-wallet fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Remaining Budget -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-start border-secondary border-4 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted text-uppercase fw-bold mb-2">Remaining Budget</h6>
+                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_budget - total_spent) if total_budget > 0 else 0.00 }}</h3>
+                    </div>
+                    <div class="bg-secondary bg-opacity-10 p-3 rounded-circle text-secondary">
+                        <i class="fa-solid fa-coins fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Financial Health Score Row -->
 <div class="row mb-4">
     <div class="col-12">
@@ -86,107 +188,6 @@
     </div>
 </div>
 
-<h5 class="fw-bold mb-3 mt-5 text-muted border-bottom pb-2">This Month's Summary</h5>
-
-<!-- Summary Cards Row -->
-<div class="row g-4 mb-4">
-    <!-- Income -->
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100 border-start border-primary border-4 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Income</h6>
-                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_income) }}</h3>
-                    </div>
-                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
-                        <i class="fa-solid fa-money-bill-trend-up fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Planned Savings -->
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100 border-start border-success border-4 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted text-uppercase fw-bold mb-2">Planned Savings</h6>
-                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(planned_savings) }}</h3>
-                    </div>
-                    <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
-                        <i class="fa-solid fa-piggy-bank fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Actual Savings -->
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100 border-start border-info border-4 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted text-uppercase fw-bold mb-2">Actual Savings</h6>
-                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(actual_savings) }}</h3>
-                    </div>
-                    <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info">
-                        <i class="fa-solid fa-vault fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Budget -->
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100 border-start border-warning border-4 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Budget</h6>
-                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_budget) }}</h3>
-                    </div>
-                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
-                        <i class="fa-solid fa-bullseye fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Spent -->
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100 border-start border-danger border-4 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted text-uppercase fw-bold mb-2">Total Spent</h6>
-                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_spent) }}</h3>
-                    </div>
-                    <div class="bg-danger bg-opacity-10 p-3 rounded-circle text-danger">
-                        <i class="fa-solid fa-wallet fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Remaining Budget -->
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100 border-start border-secondary border-4 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted text-uppercase fw-bold mb-2">Remaining Budget</h6>
-                        <h3 class="mb-0 fw-bold">₹{{ "%.2f"|format(total_budget - total_spent) if total_budget > 0 else 0.00 }}</h3>
-                    </div>
-                    <div class="bg-secondary bg-opacity-10 p-3 rounded-circle text-secondary">
-                        <i class="fa-solid fa-coins fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Charts Row -->
 <div class="row g-4 mb-4">

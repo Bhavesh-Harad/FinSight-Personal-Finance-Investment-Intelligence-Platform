@@ -43,17 +43,12 @@ def delete_user(user_id):
 def dashboard():
     form = ExpenseForm()
     if form.validate_on_submit():
-        expense = Expense(title=form.title.data, amount=form.amount.data, 
-                          category=form.category.data, payment_mode=form.payment_mode.data,
-                          date=form.date.data, description=form.description.data, 
-                          user_id=current_user.id)
-        db.session.add(expense)
-        
         # Check if expense exceeds budget
         monthly_expenses = Expense.query.filter(
             Expense.user_id == current_user.id,
             db.extract('month', Expense.date) == form.date.data.month,
-            db.extract('year', Expense.date) == form.date.data.year
+            db.extract('year', Expense.date) == form.date.data.year,
+            Expense.category.notin_(['Savings Goal', 'Investment'])
         ).all()
         
         category_budget = Budget.query.filter_by(
@@ -89,24 +84,30 @@ def dashboard():
         if category_budget:
             category_spent = sum(e.amount for e in monthly_expenses if e.category == form.category.data) + form.amount.data
             if category_spent > category_budget.amount:
-                flash(f'Warning: This expense exceeds your {form.category.data} budget limit!', 'warning')
+                flash(f'Error: This expense exceeds your {form.category.data} budget limit!', 'danger')
                 exceeded = True
         elif other_budget:
             # If no specific category budget, it falls under 'Other'
             other_spent = sum(e.amount for e in monthly_expenses if e.category == 'Other' or e.category not in budget_categories) + form.amount.data
             if other_spent > other_budget.amount:
-                flash(f'Warning: This expense exceeds your Other budget limit!', 'warning')
+                flash(f'Error: This expense exceeds your Other budget limit!', 'danger')
                 exceeded = True
                 
         total_spent = sum(e.amount for e in monthly_expenses) + form.amount.data
         if overall_budget and total_spent > overall_budget.amount:
-            flash(f'Warning: This expense exceeds your Overall budget limit!', 'warning')
+            flash(f'Error: This expense exceeds your Overall budget limit!', 'danger')
             exceeded = True
             
-        if not exceeded:
-            flash('Expense added from dashboard!', 'success')
+        if exceeded:
+            return redirect(url_for('main.dashboard'))
             
+        expense = Expense(title=form.title.data, amount=form.amount.data, 
+                          category=form.category.data, payment_mode=form.payment_mode.data,
+                          date=form.date.data, description=form.description.data, 
+                          user_id=current_user.id)
+        db.session.add(expense)
         db.session.commit()
+        flash('Expense added from dashboard!', 'success')
         return redirect(url_for('main.dashboard'))
 
     # Gather data for summary cards
@@ -116,11 +117,11 @@ def dashboard():
     
     expenses = Expense.query.filter_by(user_id=current_user.id).order_by(Expense.date.desc()).all()
     
-    # Calculate total expenses this month
-    monthly_expenses = [e for e in expenses if e.date.month == current_month and e.date.year == current_year]
+    # Calculate total expenses this month (exclude savings transfers and investments)
+    monthly_expenses = [e for e in expenses if e.date.month == current_month and e.date.year == current_year and e.category not in ['Savings Goal', 'Investment']]
     total_spent_this_month = sum(e.amount for e in monthly_expenses)
     
-    # Calculate budgets this month
+    # Recent transactions can include all of them or just expenses. We will keep all in recent_transactions.
     budgets = Budget.query.filter_by(user_id=current_user.id, month=current_month, year=current_year).all()
     overall_budget = next((b for b in budgets if b.category == 'Overall'), None)
     if overall_budget:
@@ -128,9 +129,9 @@ def dashboard():
     else:
         total_budget_this_month = sum(b.amount for b in budgets)
     
-    # Calculate incomes this month
+    # Calculate incomes this month (exclude savings goal refunds)
     incomes = Income.query.filter_by(user_id=current_user.id).order_by(Income.date.desc()).all()
-    monthly_incomes = [i for i in incomes if i.date.month == current_month and i.date.year == current_year]
+    monthly_incomes = [i for i in incomes if i.date.month == current_month and i.date.year == current_year and i.source != 'Savings Goal']
     total_income_this_month = sum(i.amount for i in monthly_incomes)
     
     # Budgets with utilization
@@ -186,7 +187,7 @@ def dashboard():
     recent_transactions = expenses[:5]
 
     planned_savings = total_income_this_month - total_budget_this_month
-    actual_savings = total_income_this_month - total_spent_this_month
+    actual_savings = current_user.get_available_savings()
     
     # 12-Month Savings Chart Logic
     months_data = {}
@@ -197,9 +198,14 @@ def dashboard():
         key = f"{i.date.year}-{i.date.month:02d}"
         if key not in months_data:
             months_data[key] = {'income': 0, 'expense': 0, 'budget': 0, 'date_obj': i.date.replace(day=1)}
-        months_data[key]['income'] += i.amount
+        if i.source != 'Savings Goal':
+            months_data[key]['income'] += i.amount
         
-    # Process expenses
+    # Process expenses (exclude savings and investments from chart logic if they distort actual spending, 
+    # but since actual_savings is calculated differently now, maybe we only exclude from budget logic.
+    # Actually, the 12-Month chart calculates 'actual_savings' per month based on income-expense.
+    # We SHOULD include all expenses (even savings/investments) to get the true 'accumulated cash flow' per month.
+    # No changes needed here, only for 'total_spent_this_month' which affects Remaining Budget.)
     all_expenses = Expense.query.filter_by(user_id=current_user.id).all()
     for e in all_expenses:
         key = f"{e.date.year}-{e.date.month:02d}"
